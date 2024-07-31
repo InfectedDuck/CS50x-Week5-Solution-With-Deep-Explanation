@@ -1,20 +1,21 @@
 // Simulate genetic inheritance of blood type
 
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
+#include <stdbool.h>  // For boolean type
+#include <stdio.h>    // For file operations and standard I/O functions
+#include <stdlib.h>   // For memory allocation and utility functions
+#include <time.h>     // For seeding the random number generator
 
-// Each person has two parents and two alleles
+// Define a structure to represent each person in the family
 typedef struct person
 {
-    struct person *parents[2];
-    char alleles[2];
+    struct person *parents[2];  // Pointers to the person's two parents
+    char alleles[2];           // Alleles for the person's blood type
 } person;
 
-const int GENERATIONS = 3;
-const int INDENT_LENGTH = 4;
+const int GENERATIONS = 3;    // Number of generations to simulate
+const int INDENT_LENGTH = 4;  // Number of spaces for indentation in the family tree output
 
+// Function prototypes
 person *create_family(int generations);
 void print_family(person *p, int generation);
 void free_family(person *p);
@@ -22,84 +23,95 @@ char random_allele();
 
 int main(void)
 {
-    // Seed random number generator
+    // Seed the random number generator with the current time
     srand(time(0));
 
-    // Create a new family with three generations
+    // Create a new family tree with the specified number of generations
     person *p = create_family(GENERATIONS);
 
-    // Print family tree of blood types
+    // Print the family tree showing blood types
     print_family(p, 0);
 
-    // Free memory
+    // Free the memory allocated for the family tree
     free_family(p);
+
+    return 0;  // Exit successfully
 }
 
-// Create a new individual with `generations`
+// Create a new family with the specified number of generations
 person *create_family(int generations)
 {
-    // TODO: Allocate memory for new person
-    person *new_person=malloc(sizeof(person));
+    // Allocate memory for a new person
+    person *new_person = malloc(sizeof(person));
+    if (new_person == NULL)
+    {
+        printf("Memory allocation failed.\n");
+        exit(1);  // Exit with error code if memory allocation fails
+    }
 
-    // If there are still generations left to create
+    // If there are more generations to create
     if (generations > 1)
     {
-        // Create two new parents for current person by recursively calling create_family
+        // Recursively create two parents for the current person
         person *parent0 = create_family(generations - 1);
         person *parent1 = create_family(generations - 1);
-        // TODO: Set parent pointers for current person
-        new_person -> parents[0]=parent0;
-        new_person -> parents[1]=parent1;
-        // TODO: Randomly assign current person's alleles based on the alleles of their parents
-        new_person->alleles[0]=parent0->alleles[rand()%2];
-        new_person->alleles[1]=parent1->alleles[rand()%2];
-    }
 
-    // If there are no generations left to create
+        // Set the parent pointers for the current person
+        new_person->parents[0] = parent0;
+        new_person->parents[1] = parent1;
+
+        // Randomly assign the current person's alleles based on their parents' alleles
+        new_person->alleles[0] = parent0->alleles[rand() % 2];
+        new_person->alleles[1] = parent1->alleles[rand() % 2];
+    }
     else
     {
-        // TODO: Set parent pointers to NULL
-        new_person -> parents[0]=NULL;
-        new_person -> parents[1]=NULL;
-        // TODO: Randomly assign alleles
-        new_person->alleles[0]=random_allele();
-        new_person->alleles[1]=random_allele();
+        // If this is the base generation (no more parents), set parent pointers to NULL
+        new_person->parents[0] = NULL;
+        new_person->parents[1] = NULL;
+
+        // Randomly assign alleles for the base generation person
+        new_person->alleles[0] = random_allele();
+        new_person->alleles[1] = random_allele();
     }
-    // TODO: Return newly created person
+
+    // Return the newly created person
     return new_person;
 }
 
-// Free `p` and all ancestors of `p`.
+// Free the memory allocated for a person and all their ancestors
 void free_family(person *p)
 {
-    // TODO: Handle base case
-    if (p==NULL)
-    {
-        return;
-    }
-    // TODO: Free parents recursively
-    free_family(p->parents[0]);
-    free_family(p->parents[1]);
-    // TODO: Free child
-    free(p);
-}
-
-// Print each family member and their alleles.
-void print_family(person *p, int generation)
-{
-    // Handle base case
+    // Base case: if the person is NULL, return
     if (p == NULL)
     {
         return;
     }
 
-    // Print indentation
+    // Recursively free the memory for the person's parents
+    free_family(p->parents[0]);
+    free_family(p->parents[1]);
+
+    // Free the memory for the current person
+    free(p);
+}
+
+// Print each family member's blood type and their generation
+void print_family(person *p, int generation)
+{
+    // Base case: if the person is NULL, return
+    if (p == NULL)
+    {
+        return;
+    }
+
+    // Print indentation based on the generation level
     for (int i = 0; i < generation * INDENT_LENGTH; i++)
     {
         printf(" ");
     }
 
-    // Print person
+    // Print information about the person based on their generation
     if (generation == 0)
     {
         printf("Child (Generation %i): blood type %c%c\n", generation, p->alleles[0], p->alleles[1]);
@@ -117,15 +129,15 @@ void print_family(person *p, int generation)
         printf("Grandparent (Generation %i): blood type %c%c\n", generation, p->alleles[0], p->alleles[1]);
     }
 
-    // Print parents of current generation
+    // Print the parents of the current person
     print_family(p->parents[0], generation + 1);
     print_family(p->parents[1], generation + 1);
 }
 
-// Randomly chooses a blood type allele.
+// Randomly chooses a blood type allele (A, B, or O)
 char random_allele()
 {
-    int r = rand() % 3;
+    int r = rand() % 3;  // Generate a random number between 0 and 2
     if (r == 0)
     {
         return 'A';
